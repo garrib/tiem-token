@@ -8,6 +8,11 @@ import com.tiem.token.test.model.UserInfo;
 import com.tiem.token.test.annotation.CheckAdmin;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import com.tiem.token.test.enums.RoleEnum;
+import com.tiem.token.test.enums.PermissionEnum;
+import com.tiem.token.common.model.TDefaultLoginUser;
+import com.tiem.token.common.model.TLoginUser;
+import com.tiem.token.core.exception.AuthException;
 
 @RestController
 @RequestMapping("/api")
@@ -19,21 +24,31 @@ public class TestController {
     @PostMapping("/login")
     public String login(@RequestParam(defaultValue = "admin") String role) {
         // 创建测试用户
-        UserInfo userInfo = new UserInfo();
-        userInfo.setId("123");
-        userInfo.setName("测试用户");
-        userInfo.setRoles(new String[]{role, "user"});
-        userInfo.setPermissions(new String[]{"user:add", "user:delete"});
+        TDefaultLoginUser loginUser = new TDefaultLoginUser()
+            .setUserId("123")
+            .setUsername("测试用户");
+        
+        // 设置角色
+        loginUser.getRoles().add(role);
+        loginUser.getRoles().add("user");
+        
+        // 设置权限
+        loginUser.getPermissions().add("user:add");
+        loginUser.getPermissions().add("user:delete");
         
         // 登录并获取token
-        String token = tokenManager.createToken(userInfo);
+        String token = tokenManager.createToken(loginUser);
         return token;
     }
     
     @CheckLogin
     @GetMapping("/user/info")
-    public UserInfo getUserInfo() {
-        return tokenManager.getLoginUser(UserInfo.class);
+    public TLoginUser getUserInfo() {
+        TLoginUser loginUser = tokenManager.getLoginUser(TLoginUser.class);
+        if (loginUser == null) {
+            throw new AuthException(ERROR_NOT_LOGIN);
+        }
+        return loginUser;
     }
     
     @CheckLogin
@@ -44,9 +59,23 @@ public class TestController {
     }
     
     @CheckLogin
+    @CheckRole(RoleEnum.ADMIN)
+    @PostMapping("/user/add2")
+    public String addUser2(@RequestBody UserInfo user) {
+        return "添加用户成功: " + user.getName();
+    }
+    
+    @CheckLogin
     @CheckPermission("user:delete")
     @DeleteMapping("/user/{id}")
     public String deleteUser(@PathVariable String id) {
+        return "删除用户成功: " + id;
+    }
+    
+    @CheckLogin
+    @CheckPermission(PermissionEnum.USER_DELETE)
+    @DeleteMapping("/user2/{id}")
+    public String deleteUser2(@PathVariable String id) {
         return "删除用户成功: " + id;
     }
     
