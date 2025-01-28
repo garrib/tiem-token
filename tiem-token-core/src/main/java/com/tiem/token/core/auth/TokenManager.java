@@ -4,6 +4,7 @@ import com.tiem.token.common.enums.BaseEnum;
 import com.tiem.token.common.enums.TokenStorageEnum;
 import com.tiem.token.common.exception.AuthException;
 import com.tiem.token.core.config.TTokenProperties;
+import com.tiem.token.core.config.TTokenConfiguration;
 import com.tiem.token.core.store.TokenStore;
 import com.tiem.token.common.generator.TokenGenerator;
 import lombok.RequiredArgsConstructor;
@@ -31,27 +32,46 @@ public class TokenManager {
     private static final String ERROR_NO_PERMISSION = "没有所需操作权限";
     
     private final TTokenProperties properties;
+    private final TTokenConfiguration configuration;
     private final HttpServletRequest request;
     private final HttpServletResponse response;
     private final TokenStore tokenStore;
     private final TokenGenerator tokenGenerator;
     
+    private String getTokenName() {
+        return configuration.getTokenName() != null ? 
+               configuration.getTokenName() : 
+               properties.getTokenName();
+    }
+    
+    private List<TokenStorageEnum> getTokenStorage() {
+        return !configuration.getTokenStorage().isEmpty() ? 
+               configuration.getTokenStorage() : 
+               properties.getTokenStorage();
+    }
+    
+    private String getTokenPrefix() {
+        return configuration.getTokenPrefix() != null ? 
+               configuration.getTokenPrefix() : 
+               properties.getTokenPrefix();
+    }
+    
     /**
      * 创建token并关联用户对象
      */
     public String createToken(Object userObj) {
-        String token = tokenGenerator.generate(userObj);
-        tokenStore.store(token, userObj);
+        String token = configuration.getTokenGenerator().generate(userObj);
+        configuration.getTokenStore().store(token, userObj);
         
-        // 根据配置存储token
-        if (properties.getTokenStorage().contains(TokenStorageEnum.COOKIE)) {
-            Cookie cookie = new Cookie(properties.getTokenName(), token);
-            cookie.setPath(properties.getCookiePath());
-            cookie.setMaxAge(properties.getCookieMaxAge());
-            if (StringUtils.hasText(properties.getCookieDomain())) {
-                cookie.setDomain(properties.getCookieDomain());
+        // 使用配置的存储方式
+        if (getTokenStorage().contains(TokenStorageEnum.COOKIE)) {
+            Cookie cookie = new Cookie(getTokenName(), token);
+            cookie.setPath(configuration.getCookiePath());
+            cookie.setMaxAge(configuration.getCookieMaxAge());
+            if (StringUtils.hasText(configuration.getCookieDomain())) {
+                cookie.setDomain(configuration.getCookieDomain());
             }
-            cookie.setHttpOnly(properties.isCookieHttpOnly());
+            cookie.setHttpOnly(configuration.isCookieHttpOnly());
             response.addCookie(cookie);
         }
         
@@ -68,7 +88,7 @@ public class TokenManager {
         }
 
         // 按照配置的顺序依次尝试获取token
-        for (TokenStorageEnum storage : properties.getTokenStorage()) {
+        for (TokenStorageEnum storage : getTokenStorage()) {
             token = getTokenFromStorage(storage);
             if (token != null) {
                 break;
@@ -85,11 +105,11 @@ public class TokenManager {
         String token = null;
         switch (storage) {
             case HEADER:
-                String headerToken = request.getHeader(properties.getTokenName());
+                String headerToken = request.getHeader(getTokenName());
                 if (StringUtils.hasText(headerToken)) {
-                    if (StringUtils.hasText(properties.getTokenPrefix()) 
-                            && headerToken.startsWith(properties.getTokenPrefix())) {
-                        token = headerToken.substring(properties.getTokenPrefix().length());
+                    if (StringUtils.hasText(getTokenPrefix()) 
+                            && headerToken.startsWith(getTokenPrefix())) {
+                        token = headerToken.substring(getTokenPrefix().length());
                     } else {
                         token = headerToken;
                     }
@@ -99,7 +119,7 @@ public class TokenManager {
                 Cookie[] cookies = request.getCookies();
                 if (cookies != null) {
                     for (Cookie cookie : cookies) {
-                        if (properties.getTokenName().equals(cookie.getName())) {
+                        if (getTokenName().equals(cookie.getName())) {
                             token = cookie.getValue();
                             break;
                         }
@@ -141,12 +161,12 @@ public class TokenManager {
             tokenStore.remove(token);
             tokenHolder.remove();
             
-            if (properties.getTokenStorage().contains(TokenStorageEnum.COOKIE)) {
-                Cookie cookie = new Cookie(properties.getTokenName(), null);
-                cookie.setPath(properties.getCookiePath());
+            if (getTokenStorage().contains(TokenStorageEnum.COOKIE)) {
+                Cookie cookie = new Cookie(getTokenName(), null);
+                cookie.setPath(configuration.getCookiePath());
                 cookie.setMaxAge(0);
-                if (StringUtils.hasText(properties.getCookieDomain())) {
-                    cookie.setDomain(properties.getCookieDomain());
+                if (StringUtils.hasText(configuration.getCookieDomain())) {
+                    cookie.setDomain(configuration.getCookieDomain());
                 }
                 response.addCookie(cookie);
             }

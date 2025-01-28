@@ -29,31 +29,19 @@ public class TTokenAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(TTokenConfiguration.class)
     public TTokenConfiguration defaultTokenConfiguration() {
-        return new TTokenConfiguration() {};  // 使用默认实现
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public TokenStore tokenStore(TTokenConfiguration configuration) {
-        return configuration.tokenStore();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public TokenGenerator tokenGenerator(TTokenConfiguration configuration) {
-        return configuration.tokenGenerator();
+        return TTokenConfiguration.builder().build();  // 使用默认配置
     }
 
     @Bean
     @ConditionalOnMissingBean
     public TokenManager tokenManager(TTokenProperties properties,
-                                   TokenStore tokenStore,
-                                   TokenGenerator tokenGenerator,
                                    TTokenConfiguration configuration) {
-        return new TokenManager(properties, tokenStore, tokenGenerator,
-                configuration.userIdGetter(),
-                configuration.roleGetter(),
-                configuration.permissionGetter());
+        return new TokenManager(properties, 
+                configuration.getTokenStore(),
+                configuration.getTokenGenerator(),
+                configuration.getUserIdGetter(),
+                configuration.getRoleGetter(),
+                configuration.getPermissionGetter());
     }
 
     @Bean
@@ -67,9 +55,7 @@ public class TTokenAutoConfiguration {
         handlers.add(new CheckPermissionHandler());
         
         // 添加自定义处理器
-        if (configuration.customAnnotationHandlers() != null) {
-            handlers.addAll(configuration.customAnnotationHandlers());
-        }
+        handlers.addAll(configuration.getAnnotationHandlers());
         
         return new AuthInterceptor(tokenManager, handlers);
     }
