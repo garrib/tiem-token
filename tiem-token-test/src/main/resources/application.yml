@@ -24,4 +24,8 @@ tiem:
     cookie-domain: example.com
     cookie-http-only: true
     store-type: redis
-    token-expire-time: 86400 
+    token-expire-time: 86400
+
+logging:
+  level:
+    com.tiem.token: debug 

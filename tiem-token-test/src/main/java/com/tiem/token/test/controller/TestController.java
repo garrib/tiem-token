@@ -5,6 +5,7 @@ import com.tiem.token.core.annotation.CheckRole;
 import com.tiem.token.core.annotation.CheckPermission;
 import com.tiem.token.core.auth.TokenManager;
 import com.tiem.token.test.model.UserInfo;
+import com.tiem.token.test.annotation.CheckAdmin;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,12 +17,12 @@ public class TestController {
     private final TokenManager tokenManager;
     
     @PostMapping("/login")
-    public String login() {
+    public String login(@RequestParam(defaultValue = "admin") String role) {
         // 创建测试用户
         UserInfo userInfo = new UserInfo();
         userInfo.setId("123");
         userInfo.setName("测试用户");
-        userInfo.setRoles(new String[]{"admin", "user"});
+        userInfo.setRoles(new String[]{role, "user"});
         userInfo.setPermissions(new String[]{"user:add", "user:delete"});
         
         // 登录并获取token
@@ -53,5 +54,26 @@ public class TestController {
     public String logout() {
         tokenManager.removeToken();
         return "退出登录成功";
+    }
+    
+    @CheckLogin
+    @CheckAdmin
+    @PostMapping("/admin/operation")
+    public String adminOperation() {
+        return "管理员操作成功";
+    }
+    
+    @CheckLogin
+    @CheckRole({"admin", "manager"})
+    @PostMapping("/manager/operation")
+    public String managerOperation() {
+        return "管理员或经理操作成功";
+    }
+    
+    @CheckLogin
+    @CheckPermission({"user:add", "user:delete"})
+    @PostMapping("/user/manage")
+    public String userManage() {
+        return "用户管理操作成功";
     }
 } 
