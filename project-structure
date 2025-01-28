@@ -1,0 +1,36 @@
+tiem-token/
+├── pom.xml (父pom)
+├── tiem-token-common/
+│   ├── pom.xml
+│   └── src/main/java/com/tiem/token/common/
+│       ├── constant/
+│       │   └── TokenConstant.java
+│       ├── enums/
+│       │   └── TokenStorageEnum.java
+│       └── exception/
+│           └── AuthException.java
+│
+├── tiem-token-core/
+│   ├── pom.xml
+│   └── src/main/java/com/tiem/token/core/
+│       ├── annotation/
+│       │   ├── CheckLogin.java
+│       │   ├── CheckRole.java
+│       │   └── CheckPermission.java
+│       ├── config/
+│       │   ├── TTokenAuthConfiguration.java
+│       │   └── TTokenProperties.java
+│       ├── auth/
+│       │   ├── TTokenAuth.java
+│       │   └── TokenManager.java
+│       └── interceptor/
+│           └── AuthInterceptor.java
+│
+└── tiem-token-test/
+    ├── pom.xml
+    └── src/main/java/com/tiem/token/test/
+        ├── TTokenTestApplication.java
+        ├── controller/
+        │   └── TestController.java
+        └── service/
+            └── UserService.java 
