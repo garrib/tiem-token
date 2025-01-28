@@ -11,6 +11,9 @@ import java.lang.annotation.*;
 public @interface CheckRole {
     /**
      * 需要的角色列表，有一个即可
+     * 支持字符串和枚举两种方式：
+     * - 字符串：@CheckRole("admin")
+     * - 枚举：@CheckRole(RoleEnum.ADMIN.getCode())
      */
-    String[] value();
+    String[] value() default {};
 } 

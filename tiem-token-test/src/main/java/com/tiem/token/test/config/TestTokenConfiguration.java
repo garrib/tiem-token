@@ -1,16 +1,20 @@
 package com.tiem.token.test.config;
 
-import com.tiem.token.core.config.TTokenConfiguration;
-import com.tiem.token.test.handler.CheckAdminHandler;
-import com.tiem.token.test.store.CustomTokenStore;
-import com.tiem.token.test.model.CustomUser;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import java.util.UUID;
-import java.util.List;
 import com.tiem.token.common.enums.TokenStorageEnum;
 import com.tiem.token.common.enums.TokenStoreTypeEnum;
+import com.tiem.token.core.config.TTokenConfiguration;
+import com.tiem.token.test.handler.CheckAdminHandler;
+import com.tiem.token.test.model.CustomUser;
+import com.tiem.token.test.store.CustomTokenStore;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * 自定义Token配置示例
+ */
 @Configuration
 public class TestTokenConfiguration {
     
@@ -37,6 +41,20 @@ public class TestTokenConfiguration {
             .userIdGetter(user -> {
                 if (user instanceof CustomUser) {
                     return ((CustomUser) user).getId();
+                }
+                return null;
+            })
+            // 自定义角色获取
+            .roleGetter(user -> {
+                if (user instanceof CustomUser) {
+                    return ((CustomUser) user).getRoles();
+                }
+                return null;
+            })
+            // 自定义权限获取
+            .permissionGetter(user -> {
+                if (user instanceof CustomUser) {
+                    return ((CustomUser) user).getPermissions();
                 }
                 return null;
             })

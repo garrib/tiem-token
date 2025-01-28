@@ -1,5 +1,7 @@
 package com.tiem.token.core.config;
 
+import com.tiem.token.common.constant.TokenConstant;
+import com.tiem.token.common.enums.TokenStoreTypeEnum;
 import com.tiem.token.core.config.getter.PermissionGetter;
 import com.tiem.token.core.config.getter.RoleGetter;
 import com.tiem.token.core.config.getter.UserIdGetter;

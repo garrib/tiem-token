@@ -1,5 +1,6 @@
 package com.tiem.token.core.handler.impl;
 
+import com.tiem.token.common.enums.BaseEnum;
 import com.tiem.token.core.annotation.CheckRole;
 import com.tiem.token.core.auth.TokenManager;
 import com.tiem.token.core.handler.AnnotationHandler;
@@ -10,8 +11,10 @@ public class CheckRoleHandler implements AnnotationHandler<CheckRole> {
     
     @Override
     public void handle(CheckRole annotation, Object tokenManager) {
+        TokenManager manager = (TokenManager) tokenManager;
+        
         for (String role : annotation.value()) {
-            ((TokenManager)tokenManager).checkRole(role);
+            manager.checkRole(role);
         }
     }
     

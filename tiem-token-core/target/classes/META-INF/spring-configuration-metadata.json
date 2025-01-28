@@ -1,0 +1,66 @@
+{
+  "groups": [
+    {
+      "name": "tiem.token",
+      "type": "com.tiem.token.core.config.TTokenProperties",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "tiem.token.cookie-domain",
+      "type": "java.lang.String",
+      "description": "cookie域名",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.cookie-http-only",
+      "type": "java.lang.Boolean",
+      "description": "是否启用httpOnly",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.cookie-max-age",
+      "type": "java.lang.Integer",
+      "description": "cookie过期时间，单位秒，默认24小时",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.cookie-path",
+      "type": "java.lang.String",
+      "description": "cookie路径",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.store-type",
+      "type": "com.tiem.token.common.enums.TokenStoreTypeEnum",
+      "description": "token存储类型：memory或redis，默认memory",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.token-expire-time",
+      "type": "java.lang.Long",
+      "description": "token过期时间，单位秒，默认24小时 仅在redis存储模式下生效",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.token-name",
+      "type": "java.lang.String",
+      "description": "token名称，默认为Authorization",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.token-prefix",
+      "type": "java.lang.String",
+      "description": "token前缀，默认Bearer，可以设置为空",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.token-storage",
+      "type": "java.util.List<com.tiem.token.common.enums.TokenStorageEnum>",
+      "description": "token存储位置：HEADER,COOKIE,ALL，默认ALL",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    }
+  ],
+  "hints": []
+}

@@ -1,6 +1,7 @@
 package com.tiem.token.core.store;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tiem.token.core.config.TTokenProperties;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;

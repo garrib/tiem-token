@@ -5,6 +5,9 @@ import com.tiem.token.common.enums.TokenStorageEnum;
 import com.tiem.token.common.exception.AuthException;
 import com.tiem.token.core.config.TTokenProperties;
 import com.tiem.token.core.config.TTokenConfiguration;
+import com.tiem.token.core.config.getter.PermissionGetter;
+import com.tiem.token.core.config.getter.RoleGetter;
+import com.tiem.token.core.config.getter.UserIdGetter;
 import com.tiem.token.core.store.TokenStore;
 import com.tiem.token.common.generator.TokenGenerator;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +38,12 @@ public class TokenManager {
     private final TTokenConfiguration configuration;
     private final HttpServletRequest request;
     private final HttpServletResponse response;
+    
     private final TokenStore tokenStore;
     private final TokenGenerator tokenGenerator;
+    private final UserIdGetter userIdGetter;
+    private final RoleGetter roleGetter;
+    private final PermissionGetter permissionGetter;
     
     private String getTokenName() {
         return configuration.getTokenName() != null ? 
@@ -56,12 +63,32 @@ public class TokenManager {
                properties.getTokenPrefix();
     }
     
+    private TokenStore getTokenStore() {
+        return configuration.getTokenStore();
+    }
+    
+    private TokenGenerator getTokenGenerator() {
+        return configuration.getTokenGenerator();
+    }
+    
+    private UserIdGetter getUserIdGetter() {
+        return configuration.getUserIdGetter();
+    }
+    
+    private RoleGetter getRoleGetter() {
+        return configuration.getRoleGetter();
+    }
+    
+    private PermissionGetter getPermissionGetter() {
+        return configuration.getPermissionGetter();
+    }
+    
     /**
      * 创建token并关联用户对象
      */
     public String createToken(Object userObj) {
-        String token = configuration.getTokenGenerator().generate(userObj);
-        configuration.getTokenStore().store(token, userObj);
+        String token = getTokenGenerator().generate(userObj);
+        getTokenStore().store(token, userObj);
         
         // 使用配置的存储方式
         if (getTokenStorage().contains(TokenStorageEnum.COOKIE)) {
@@ -136,7 +163,7 @@ public class TokenManager {
     public Object getLoginUser() {
         String token = getToken();
         if (token != null) {
-            return tokenStore.getUser(token, Object.class);
+            return getTokenStore().getUser(token, Object.class);
         }
         return null;
     }
@@ -158,7 +185,7 @@ public class TokenManager {
     public void removeToken() {
         String token = getToken();
         if (token != null) {
-            tokenStore.remove(token);
+            getTokenStore().remove(token);
             tokenHolder.remove();
             
             if (getTokenStorage().contains(TokenStorageEnum.COOKIE)) {
