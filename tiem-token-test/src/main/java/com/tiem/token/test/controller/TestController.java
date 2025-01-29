@@ -28,10 +28,10 @@ public class TestController {
     @PostMapping("/login")
     public String login(@RequestParam(defaultValue = "admin") String role) {
         // 创建测试用户
-        TDefaultLoginUser loginUser = new TDefaultLoginUser()
-            .setUserId("123")
-            .setUsername("测试用户");
-        
+        CustomUser loginUser = new CustomUser();
+        loginUser.setId("123");
+        loginUser.setUsername("测试用户");
+
         // 设置角色
         loginUser.getRoles().add(role);
         loginUser.getRoles().add("user");
