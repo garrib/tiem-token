@@ -5,7 +5,6 @@ import com.tiem.token.common.enums.TokenStoreTypeEnum;
 import com.tiem.token.core.config.TTokenConfiguration;
 import com.tiem.token.test.handler.CheckAdminHandler;
 import com.tiem.token.test.model.CustomUser;
-import com.tiem.token.test.store.CustomTokenStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,8 +20,6 @@ public class TestTokenConfiguration {
     @Bean
     public TTokenConfiguration tokenConfiguration() {
         return TTokenConfiguration.builder()
-            // 自定义存储实现
-            .tokenStore(new CustomTokenStore())
             // 自定义token生成
             .tokenGenerator(userObj -> {
                 if (userObj instanceof CustomUser) {

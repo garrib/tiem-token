@@ -22,6 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.tiem.token.common.model.TLoginUser;
 import java.util.List;
 import java.util.ArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @Component
 public class TokenManager {
@@ -43,6 +46,8 @@ public class TokenManager {
     private final UserIdGetter userIdGetter;
     private final RoleGetter roleGetter;
     private final PermissionGetter permissionGetter;
+    
+    private static final Logger log = LoggerFactory.getLogger(TokenManager.class);
     
     public TokenManager(TTokenProperties properties,
                        TTokenConfiguration configuration,
@@ -175,23 +180,23 @@ public class TokenManager {
     /**
      * 获取当前登录用户
      */
-    public Object getLoginUser() {
+    @SuppressWarnings("unchecked")
+    public <T> T getLoginUser() {
         String token = getToken();
         if (token != null) {
-            return getTokenStore().getUser(token, Object.class);
+            // 直接返回原始对象
+            return (T) getTokenStore().getUser(token, Object.class);
         }
         return null;
     }
     
     /**
      * 获取当前登录用户并转换为指定类型
+     * @deprecated 使用无参数的getLoginUser()方法代替
      */
+    @Deprecated
     public <T> T getLoginUser(Class<T> userClass) {
-        Object userObj = getLoginUser();
-        if (userObj != null && userClass.isInstance(userObj)) {
-            return userClass.cast(userObj);
-        }
-        return null;
+        return getLoginUser();
     }
     
     /**
@@ -297,19 +302,15 @@ public class TokenManager {
      * 获取用户角色列表
      */
     private List<String> getUserRoles(Object userObj) {
-        if (userObj instanceof TLoginUser) {
-            return ((TLoginUser) userObj).getRoles();
-        }
-        try {
-            // 向后兼容，通过反射获取roles属性
-            Object result = userObj.getClass().getMethod("getRoles").invoke(userObj);
-            if (result instanceof List) {
-                return (List<String>) result;
-            } else if (result instanceof String[]) {
-                return Arrays.asList((String[]) result);
+        RoleGetter roleGetter = getRoleGetter();
+        if (roleGetter != null) {
+            try {
+                List<String> roles = roleGetter.getRoles(userObj);
+                return roles != null ? roles : new ArrayList<>();
+            } catch (Exception e) {
+                log.error("Failed to get user roles", e);
+                return new ArrayList<>();
             }
-        } catch (Exception e) {
-            // 忽略异常
         }
         return new ArrayList<>();
     }
@@ -318,19 +319,15 @@ public class TokenManager {
      * 获取用户权限列表
      */
     private List<String> getUserPermissions(Object userObj) {
-        if (userObj instanceof TLoginUser) {
-            return ((TLoginUser) userObj).getPermissions();
-        }
-        try {
-            // 向后兼容，通过反射获取permissions属性
-            Object result = userObj.getClass().getMethod("getPermissions").invoke(userObj);
-            if (result instanceof List) {
-                return (List<String>) result;
-            } else if (result instanceof String[]) {
-                return Arrays.asList((String[]) result);
+        PermissionGetter permissionGetter = getPermissionGetter();
+        if (permissionGetter != null) {
+            try {
+                List<String> permissions = permissionGetter.getPermissions(userObj);
+                return permissions != null ? permissions : new ArrayList<>();
+            } catch (Exception e) {
+                log.error("Failed to get user permissions", e);
+                return new ArrayList<>();
             }
-        } catch (Exception e) {
-            // 忽略异常
         }
         return new ArrayList<>();
     }

@@ -64,18 +64,21 @@ public class TestController {
     @CheckLogin
     @GetMapping("/user/info")
     public TLoginUser getUserInfo() {
-        // 使用工具类获取用户信息
-        TLoginUser loginUser = TTokenUtil.getLoginUser(TLoginUser.class);
-        if (loginUser == null) {
+        TLoginUser user = TTokenUtil.getLoginUser();
+        if (user == null) {
             throw new AuthException("未登录");
         }
-        return loginUser;
+        return user;
     }
     
     @CheckLogin
     @GetMapping("/user/custom")
     public CustomUser getCustomUser() {
-        return TTokenUtil.getLoginUser(CustomUser.class);
+        CustomUser user = TTokenUtil.<CustomUser>getLoginUser();
+        if (user == null) {
+            throw new AuthException("未登录");
+        }
+        return user;
     }
     
     @GetMapping("/check/login")

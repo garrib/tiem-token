@@ -7,7 +7,7 @@ public interface TokenStore {
     void store(String token, Object userObj);
     
     /**
-     * 获取token关联的用户对象
+     * 根据token获取用户对象
      */
     <T> T getUser(String token, Class<T> userClass);
     

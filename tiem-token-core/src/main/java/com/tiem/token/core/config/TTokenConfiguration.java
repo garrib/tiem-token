@@ -11,6 +11,7 @@ import com.tiem.token.core.store.MemoryTokenStore;
 import com.tiem.token.core.store.TokenStore;
 import com.tiem.token.common.generator.TokenGenerator;
 import com.tiem.token.common.model.TLoginUser;
+import lombok.Builder;
 import lombok.Getter;
 import com.tiem.token.common.enums.TokenStorageEnum;
 import java.util.Arrays;
@@ -18,6 +19,9 @@ import java.util.Arrays;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 
 /**
  * Token配置类，使用builder模式配置
@@ -42,6 +46,9 @@ public class TTokenConfiguration {
     private TokenStoreTypeEnum storeType;
     private long tokenExpireTime;
     
+    @lombok.Builder.Default
+    private ObjectMapper objectMapper = new ObjectMapper();
+    
     private TTokenConfiguration() {
         // 设置默认值
         this.tokenStore = new MemoryTokenStore();
@@ -60,6 +67,12 @@ public class TTokenConfiguration {
         this.cookieHttpOnly = TokenConstant.DEFAULT_COOKIE_HTTP_ONLY;
         this.storeType = TokenStoreTypeEnum.MEMORY;
         this.tokenExpireTime = TokenConstant.DEFAULT_TOKEN_EXPIRE_TIME;
+        
+        // 初始化ObjectMapper
+        this.objectMapper = new ObjectMapper();
+        // 配置ObjectMapper
+        this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
     
     public static Builder builder() {
@@ -177,6 +190,11 @@ public class TTokenConfiguration {
         
         public Builder tokenExpireTime(long tokenExpireTime) {
             config.tokenExpireTime = tokenExpireTime;
+            return this;
+        }
+        
+        public Builder objectMapper(ObjectMapper objectMapper) {
+            config.objectMapper = objectMapper;
             return this;
         }
         
