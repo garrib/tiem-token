@@ -16,13 +16,13 @@
     {
       "name": "tiem.token.cookie-http-only",
       "type": "java.lang.Boolean",
-      "description": "是否启用httpOnly",
+      "description": "cookie是否只允许http访问",
       "sourceType": "com.tiem.token.core.config.TTokenProperties"
     },
     {
       "name": "tiem.token.cookie-max-age",
       "type": "java.lang.Integer",
-      "description": "cookie过期时间，单位秒，默认24小时",
+      "description": "cookie过期时间（秒）",
       "sourceType": "com.tiem.token.core.config.TTokenProperties"
     },
     {
@@ -32,33 +32,39 @@
       "sourceType": "com.tiem.token.core.config.TTokenProperties"
     },
     {
+      "name": "tiem.token.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用，默认true",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
       "name": "tiem.token.store-type",
       "type": "com.tiem.token.common.enums.TokenStoreTypeEnum",
-      "description": "token存储类型：memory或redis，默认memory",
+      "description": "存储类型",
       "sourceType": "com.tiem.token.core.config.TTokenProperties"
     },
     {
       "name": "tiem.token.token-expire-time",
       "type": "java.lang.Long",
-      "description": "token过期时间，单位秒，默认24小时 仅在redis存储模式下生效",
+      "description": "token过期时间（秒），默认30分钟",
       "sourceType": "com.tiem.token.core.config.TTokenProperties"
     },
     {
       "name": "tiem.token.token-name",
       "type": "java.lang.String",
-      "description": "token名称，默认为Authorization",
+      "description": "token名称",
       "sourceType": "com.tiem.token.core.config.TTokenProperties"
     },
     {
       "name": "tiem.token.token-prefix",
       "type": "java.lang.String",
-      "description": "token前缀，默认Bearer，可以设置为空",
+      "description": "token前缀",
       "sourceType": "com.tiem.token.core.config.TTokenProperties"
     },
     {
       "name": "tiem.token.token-storage",
       "type": "java.util.List<com.tiem.token.common.enums.TokenStorageEnum>",
-      "description": "token存储位置：HEADER,COOKIE,ALL，默认ALL",
+      "description": "token存储方式",
       "sourceType": "com.tiem.token.core.config.TTokenProperties"
     }
   ],

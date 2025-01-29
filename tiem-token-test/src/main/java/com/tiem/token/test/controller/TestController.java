@@ -16,6 +16,7 @@ import com.tiem.token.common.model.TLoginUser;
 import com.tiem.token.core.util.TTokenUtil;
 import com.tiem.token.test.model.CustomUser;
 import com.tiem.token.test.annotation.UserPermission;
+import com.tiem.token.test.annotation.UserRole;
 
 @RestController
 @RequestMapping("/api")
@@ -110,7 +111,7 @@ public class TestController {
     }
     
     @CheckLogin
-    @CheckRole(RoleEnum.ADMIN.getCode())
+    @UserRole(RoleEnum.ADMIN)
     @PostMapping("/user/add2")
     public String addUser2(@RequestBody UserInfo user) {
         return "添加用户成功: " + user.getName();
@@ -124,7 +125,7 @@ public class TestController {
     }
     
     @CheckLogin
-    @CheckPermission(PermissionEnum.USER_DELETE.getCode())
+    @UserPermission(PermissionEnum.USER_DELETE)
     @DeleteMapping("/user2/{id}")
     public String deleteUser2(@PathVariable String id) {
         return "删除用户成功: " + id;
@@ -141,6 +142,16 @@ public class TestController {
     @CheckRole({"admin", "manager"})
     @PostMapping("/manager/operation")
     public String managerOperation() {
+        return "管理员或经理操作成功";
+    }
+    
+    @CheckLogin
+    @UserRole({
+        RoleEnum.ADMIN,
+        RoleEnum.MANAGER
+    })
+    @PostMapping("/manager/operation2")
+    public String managerOperation2() {
         return "管理员或经理操作成功";
     }
     

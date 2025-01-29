@@ -1,61 +1,71 @@
 package com.tiem.token.core.config;
 
-import com.tiem.token.common.constant.TokenConstant;
 import com.tiem.token.common.enums.TokenStorageEnum;
 import com.tiem.token.common.enums.TokenStoreTypeEnum;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Token配置属性
+ */
 @Data
+@Component  // 添加这个注解
 @ConfigurationProperties(prefix = "tiem.token")
 public class TTokenProperties {
     
     /**
-     * token名称，默认为Authorization
+     * 是否启用，默认true
      */
-    private String tokenName = TokenConstant.DEFAULT_TOKEN_NAME;
-    
+    private boolean enabled = true;
+
     /**
-     * token存储位置：HEADER,COOKIE,ALL，默认ALL
+     * token名称
      */
-    private List<TokenStorageEnum> tokenStorage = Arrays.asList(TokenStorageEnum.values());
-    
+    private String tokenName = "token";
+
     /**
-     * token前缀，默认Bearer，可以设置为空
+     * token存储方式
      */
-    private String tokenPrefix = TokenConstant.DEFAULT_TOKEN_PREFIX;
-    
+    private List<TokenStorageEnum> tokenStorage = new ArrayList<>() {{
+        add(TokenStorageEnum.HEADER);
+    }};
+
     /**
-     * cookie过期时间，单位秒，默认24小时
+     * token前缀
      */
-    private int cookieMaxAge = TokenConstant.DEFAULT_COOKIE_MAX_AGE;
-    
+    private String tokenPrefix = "Bearer ";
+
+    /**
+     * cookie过期时间（秒）
+     */
+    private int cookieMaxAge = -1;
+
     /**
      * cookie路径
      */
-    private String cookiePath = TokenConstant.DEFAULT_COOKIE_PATH;
-    
+    private String cookiePath = "/";
+
     /**
      * cookie域名
      */
     private String cookieDomain;
-    
+
     /**
-     * 是否启用httpOnly
+     * cookie是否只允许http访问
      */
-    private boolean cookieHttpOnly = TokenConstant.DEFAULT_COOKIE_HTTP_ONLY;
-    
+    private boolean cookieHttpOnly = true;
+
     /**
-     * token存储类型：memory或redis，默认memory
+     * 存储类型
      */
     private TokenStoreTypeEnum storeType = TokenStoreTypeEnum.MEMORY;
-    
+
     /**
-     * token过期时间，单位秒，默认24小时
-     * 仅在redis存储模式下生效
+     * token过期时间（秒），默认30分钟
      */
-    private long tokenExpireTime = TokenConstant.DEFAULT_TOKEN_EXPIRE_TIME;
+    private long tokenExpireTime = 1800;
 } 

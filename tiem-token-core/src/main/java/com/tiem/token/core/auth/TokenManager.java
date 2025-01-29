@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Component
-@RequiredArgsConstructor
 public class TokenManager {
     
     private static final Map<String, Object> tokenUserMap = new ConcurrentHashMap<>();
@@ -44,6 +43,22 @@ public class TokenManager {
     private final UserIdGetter userIdGetter;
     private final RoleGetter roleGetter;
     private final PermissionGetter permissionGetter;
+    
+    public TokenManager(TTokenProperties properties,
+                       TTokenConfiguration configuration,
+                       HttpServletRequest request,
+                       HttpServletResponse response) {
+        this.properties = properties;
+        this.configuration = configuration;
+        this.request = request;
+        this.response = response;
+        
+        this.tokenStore = configuration.getTokenStore();
+        this.tokenGenerator = configuration.getTokenGenerator();
+        this.userIdGetter = configuration.getUserIdGetter();
+        this.roleGetter = configuration.getRoleGetter();
+        this.permissionGetter = configuration.getPermissionGetter();
+    }
     
     private String getTokenName() {
         return configuration.getTokenName() != null ? 

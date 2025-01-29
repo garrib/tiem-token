@@ -1,5 +1,6 @@
 package com.tiem.token.core.config;
 
+import com.tiem.token.common.enums.TokenStoreTypeEnum;
 import com.tiem.token.core.auth.TokenManager;
 import com.tiem.token.core.handler.impl.CheckLoginHandler;
 import com.tiem.token.core.handler.impl.CheckPermissionHandler;
@@ -11,14 +12,14 @@ import com.tiem.token.core.interceptor.AuthInterceptor;
 import com.tiem.token.core.handler.AnnotationHandler;
 import com.tiem.token.core.generator.DefaultTokenGenerator;
 import com.tiem.token.common.generator.TokenGenerator;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,16 +30,16 @@ import java.util.List;
 
 /**
  * Token自动配置类
+ * 只在用户没有自定义配置时生效
  */
 @Configuration
-@ConditionalOnProperty(prefix = "tiem.token", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties(TTokenProperties.class)
-@AutoConfigureAfter(RedisAutoConfiguration.class)
+@AutoConfigureAfter({RedisAutoConfiguration.class, TokenStoreConfiguration.class})
+@ConditionalOnMissingBean(type = "com.tiem.token.test.config.TestTokenConfiguration")
 public class TTokenAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean
-    public TTokenConfiguration tokenConfiguration(TTokenProperties properties) {
+    @ConditionalOnMissingBean(TTokenConfiguration.class)
+    public TTokenConfiguration tokenConfiguration(TTokenProperties properties, TokenStore tokenStore) {
         return TTokenConfiguration.builder()
             .tokenName(properties.getTokenName())
             .tokenStorage(properties.getTokenStorage())
@@ -49,11 +50,12 @@ public class TTokenAutoConfiguration {
             .cookieHttpOnly(properties.isCookieHttpOnly())
             .storeType(properties.getStoreType())
             .tokenExpireTime(properties.getTokenExpireTime())
+            .tokenStore(tokenStore)
             .build();
     }
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(TokenManager.class)
     public TokenManager tokenManager(TTokenProperties properties,
                                    TTokenConfiguration configuration,
                                    HttpServletRequest request,
@@ -62,36 +64,18 @@ public class TTokenAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(AuthInterceptor.class)
     public AuthInterceptor authInterceptor(TokenManager tokenManager,
                                          TTokenConfiguration configuration) {
         List<AnnotationHandler<? extends Annotation>> handlers = new ArrayList<>();
-        // 添加默认处理器
         handlers.add(new CheckLoginHandler());
         handlers.add(new CheckRoleHandler());
         handlers.add(new CheckPermissionHandler());
         
-        // 添加自定义处理器
         if (configuration.getAnnotationHandlers() != null) {
             handlers.addAll(configuration.getAnnotationHandlers());
         }
         
         return new AuthInterceptor(tokenManager, handlers);
-    }
-    
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(name = "tiem.token.store-type", havingValue = "redis")
-    public TokenStore redisTokenStore(StringRedisTemplate redisTemplate,
-                                    ObjectMapper objectMapper,
-                                    TTokenProperties properties) {
-        return new RedisTokenStore(redisTemplate, objectMapper, properties);
-    }
-    
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(name = "tiem.token.store-type", havingValue = "memory", matchIfMissing = true)
-    public TokenStore memoryTokenStore() {
-        return new MemoryTokenStore();
     }
 } 

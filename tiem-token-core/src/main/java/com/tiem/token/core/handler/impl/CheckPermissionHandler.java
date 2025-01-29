@@ -1,6 +1,7 @@
 package com.tiem.token.core.handler.impl;
 
 import com.tiem.token.common.enums.BaseEnum;
+import com.tiem.token.common.exception.AuthException;
 import com.tiem.token.core.annotation.CheckPermission;
 import com.tiem.token.core.annotation.Permission;
 import com.tiem.token.core.auth.TokenManager;
@@ -49,7 +50,7 @@ public class CheckPermissionHandler implements AnnotationHandler<Annotation> {
                 }
             }
         } catch (Exception e) {
-            throw new AuthException("Failed to process custom permission annotation", e);
+            throw new AuthException("Failed to process custom permission annotation");
         }
     }
     
