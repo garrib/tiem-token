@@ -1,7 +1,6 @@
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tiem.token.core.config.TTokenAutoConfiguration,\
-com.tiem.token.core.config.TokenStoreConfiguration
+com.tiem.token.core.config.TTokenAutoConfiguration
 
 # Environment Post Processors
 org.springframework.boot.env.EnvironmentPostProcessor=\

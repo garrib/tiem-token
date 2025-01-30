@@ -14,17 +14,15 @@ spring:
 
 tiem:
   token:
-    token-name: X-Token
+    token-name: X-Custom-Token
+    token-prefix: "Custom "
     token-storage: 
       - HEADER
-      - COOKIE
-    token-prefix: "Bearer "  # 设置为空字符串则不使用前缀
-    cookie-max-age: 86400
-    cookie-path: /
-    cookie-domain: example.com
-    cookie-http-only: true
-    store-type: memory  # 可选值：memory, redis, 或自定义实现
-    token-expire-time: 86400
+    cookie-max-age: 7200
+    store-type: redis
+    token-expire-time: 7200
+    timeout: 86400        # 一天后过期
+    active-timeout: 1800  # 30分钟无操作就过期
 
 logging:
   level:

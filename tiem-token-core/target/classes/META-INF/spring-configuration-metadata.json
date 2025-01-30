@@ -8,6 +8,18 @@
   ],
   "properties": [
     {
+      "name": "tiem.token.active-timeout",
+      "type": "java.lang.Long",
+      "description": "token临时有效期（指定时间无操作就过期）单位: 秒，默认30分钟",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.concurrent",
+      "type": "java.lang.Boolean",
+      "description": "是否允许同一账号并发登录，默认true",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
       "name": "tiem.token.cookie-domain",
       "type": "java.lang.String",
       "description": "cookie域名",
@@ -38,9 +50,27 @@
       "sourceType": "com.tiem.token.core.config.TTokenProperties"
     },
     {
+      "name": "tiem.token.log",
+      "type": "java.lang.Boolean",
+      "description": "是否输出操作日志，默认true",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.share",
+      "type": "java.lang.Boolean",
+      "description": "是否共用token，默认true",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
       "name": "tiem.token.store-type",
       "type": "com.tiem.token.common.enums.TokenStoreTypeEnum",
       "description": "存储类型",
+      "sourceType": "com.tiem.token.core.config.TTokenProperties"
+    },
+    {
+      "name": "tiem.token.timeout",
+      "type": "java.lang.Long",
+      "description": "token有效期（必定过期）单位: 秒，默认一天",
       "sourceType": "com.tiem.token.core.config.TTokenProperties"
     },
     {

@@ -2,10 +2,13 @@ package com.tiem.token.common.enums;
 
 import lombok.Getter;
 
+import static com.tiem.token.common.constant.TokenConstant.STORE_TYPE_MEMORY;
+import static com.tiem.token.common.constant.TokenConstant.STORE_TYPE_REDIS;
+
 @Getter
 public enum TokenStoreTypeEnum {
-    MEMORY("memory"),
-    REDIS("redis");
+    MEMORY(STORE_TYPE_MEMORY),
+    REDIS(STORE_TYPE_REDIS);
     
     private final String type;
     

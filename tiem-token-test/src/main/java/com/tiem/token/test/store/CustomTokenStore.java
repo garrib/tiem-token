@@ -26,7 +26,22 @@ public class CustomTokenStore implements TokenStore {
             throw new AuthException("Failed to store token");
         }
     }
-    
+
+    @Override
+    public void updateLastAccessTime(String token) {
+
+    }
+
+    @Override
+    public Long getLastAccessTime(String token) {
+        return null;
+    }
+
+    @Override
+    public Long getCreateTime(String token) {
+        return null;
+    }
+
     @Override
     public <T> T getUser(String token, Class<T> userClass) {
         try {
@@ -60,5 +75,20 @@ public class CustomTokenStore implements TokenStore {
             log.error("Failed to check token existence", e);
             throw new AuthException("Failed to check token existence");
         }
+    }
+
+    @Override
+    public String getTokenByUserId(String userId) {
+        return null;
+    }
+
+    @Override
+    public void storeUserIdToken(String userId, String token) {
+
+    }
+
+    @Override
+    public void removeUserIdToken(String userId) {
+
     }
 } 

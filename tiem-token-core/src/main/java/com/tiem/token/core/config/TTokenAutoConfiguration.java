@@ -1,28 +1,22 @@
 package com.tiem.token.core.config;
 
-import com.tiem.token.common.enums.TokenStoreTypeEnum;
 import com.tiem.token.core.auth.TokenManager;
 import com.tiem.token.core.handler.impl.CheckLoginHandler;
 import com.tiem.token.core.handler.impl.CheckPermissionHandler;
 import com.tiem.token.core.handler.impl.CheckRoleHandler;
 import com.tiem.token.core.store.TokenStore;
-import com.tiem.token.core.store.MemoryTokenStore;
-import com.tiem.token.core.store.RedisTokenStore;
 import com.tiem.token.core.interceptor.AuthInterceptor;
 import com.tiem.token.core.handler.AnnotationHandler;
-import com.tiem.token.core.generator.DefaultTokenGenerator;
-import com.tiem.token.common.generator.TokenGenerator;
+import com.tiem.token.core.log.TokenLogger;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import static com.tiem.token.common.constant.TokenConstant.CONFIG_PREFIX;
+import static com.tiem.token.common.constant.TokenConstant.PROP_ENABLED;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -33,14 +27,18 @@ import java.util.List;
  * 只在用户没有自定义配置时生效
  */
 @Configuration
-@AutoConfigureAfter({RedisAutoConfiguration.class, TokenStoreConfiguration.class})
-@ConditionalOnMissingBean(type = "com.tiem.token.test.config.TestTokenConfiguration")
+@ConditionalOnProperty(prefix = CONFIG_PREFIX, name = PROP_ENABLED, matchIfMissing = true)
+@AutoConfigureAfter(RedisAutoConfiguration.class)
 public class TTokenAutoConfiguration {
+    @Autowired
+    TTokenProperties properties;
 
-    @Bean
-    @ConditionalOnMissingBean(TTokenConfiguration.class)
-    public TTokenConfiguration tokenConfiguration(TTokenProperties properties, TokenStore tokenStore) {
-        return TTokenConfiguration.builder()
+    @Autowired
+    TokenStore tokenStore;
+
+    @Bean("defaultTokenConfiguration")
+    public DefaultTTokenConfiguration defaultTokenConfiguration() {
+        return DefaultTTokenConfiguration.builder()
             .tokenName(properties.getTokenName())
             .tokenStorage(properties.getTokenStorage())
             .tokenPrefix(properties.getTokenPrefix())
@@ -56,26 +54,13 @@ public class TTokenAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(TokenManager.class)
-    public TokenManager tokenManager(TTokenProperties properties,
-                                   TTokenConfiguration configuration,
-                                   HttpServletRequest request,
-                                   HttpServletResponse response) {
-        return new TokenManager(properties, configuration, request, response);
+    public TokenManager tokenManager() {
+        return new TokenManager();
     }
 
     @Bean
     @ConditionalOnMissingBean(AuthInterceptor.class)
-    public AuthInterceptor authInterceptor(TokenManager tokenManager,
-                                         TTokenConfiguration configuration) {
-        List<AnnotationHandler<? extends Annotation>> handlers = new ArrayList<>();
-        handlers.add(new CheckLoginHandler());
-        handlers.add(new CheckRoleHandler());
-        handlers.add(new CheckPermissionHandler());
-        
-        if (configuration.getAnnotationHandlers() != null) {
-            handlers.addAll(configuration.getAnnotationHandlers());
-        }
-        
-        return new AuthInterceptor(tokenManager, handlers);
+    public AuthInterceptor authInterceptor() {
+        return new AuthInterceptor();
     }
 } 

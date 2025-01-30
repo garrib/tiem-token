@@ -22,6 +22,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import lombok.Data;
 
 /**
  * Token配置类，使用builder模式配置
@@ -49,7 +50,7 @@ public class TTokenConfiguration {
     @lombok.Builder.Default
     private ObjectMapper objectMapper = new ObjectMapper();
     
-    private TTokenConfiguration() {
+    protected TTokenConfiguration() {
         // 设置默认值
         this.tokenStore = new MemoryTokenStore();
         this.tokenGenerator = new DefaultTokenGenerator();
@@ -73,6 +74,27 @@ public class TTokenConfiguration {
         // 配置ObjectMapper
         this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+    
+    protected TTokenConfiguration(Builder builder) {
+        this();  // 调用默认构造函数设置默认值
+        // 从builder复制值
+        this.tokenStore = builder.getConfig().tokenStore;
+        this.tokenGenerator = builder.getConfig().tokenGenerator;
+        this.userIdGetter = builder.getConfig().userIdGetter;
+        this.roleGetter = builder.getConfig().roleGetter;
+        this.permissionGetter = builder.getConfig().permissionGetter;
+        this.annotationHandlers = builder.getConfig().annotationHandlers;
+        this.tokenName = builder.getConfig().tokenName;
+        this.tokenStorage = builder.getConfig().tokenStorage;
+        this.tokenPrefix = builder.getConfig().tokenPrefix;
+        this.cookieMaxAge = builder.getConfig().cookieMaxAge;
+        this.cookiePath = builder.getConfig().cookiePath;
+        this.cookieDomain = builder.getConfig().cookieDomain;
+        this.cookieHttpOnly = builder.getConfig().cookieHttpOnly;
+        this.storeType = builder.getConfig().storeType;
+        this.tokenExpireTime = builder.getConfig().tokenExpireTime;
+        this.objectMapper = builder.getConfig().objectMapper;
     }
     
     public static Builder builder() {
@@ -106,6 +128,7 @@ public class TTokenConfiguration {
         };
     }
     
+    @Data
     public static class Builder {
         private final TTokenConfiguration config;
         
@@ -198,8 +221,8 @@ public class TTokenConfiguration {
             return this;
         }
         
-        public TTokenConfiguration build() {
-            return config;
+        public DefaultTTokenConfiguration build() {
+            return new DefaultTTokenConfiguration(this);
         }
     }
 } 

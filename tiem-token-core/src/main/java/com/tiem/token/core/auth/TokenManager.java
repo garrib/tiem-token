@@ -3,6 +3,7 @@ package com.tiem.token.core.auth;
 import com.tiem.token.common.enums.BaseEnum;
 import com.tiem.token.common.enums.TokenStorageEnum;
 import com.tiem.token.common.exception.AuthException;
+import com.tiem.token.core.config.DefaultTTokenConfiguration;
 import com.tiem.token.core.config.TTokenProperties;
 import com.tiem.token.core.config.TTokenConfiguration;
 import com.tiem.token.core.config.getter.PermissionGetter;
@@ -10,7 +11,9 @@ import com.tiem.token.core.config.getter.RoleGetter;
 import com.tiem.token.core.config.getter.UserIdGetter;
 import com.tiem.token.core.store.TokenStore;
 import com.tiem.token.common.generator.TokenGenerator;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import jakarta.servlet.http.Cookie;
@@ -19,50 +22,57 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import com.tiem.token.common.model.TLoginUser;
 import java.util.List;
 import java.util.ArrayList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.tiem.token.core.log.TokenLogger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
+import static com.tiem.token.common.constant.TokenConstant.*;
+
+@Slf4j
 @Component
 public class TokenManager {
     
     private static final Map<String, Object> tokenUserMap = new ConcurrentHashMap<>();
     private static final ThreadLocal<String> tokenHolder = new ThreadLocal<>();
     
-    private static final String ERROR_NOT_LOGIN = "未登录";
-    private static final String ERROR_NO_ROLE = "没有所需角色权限";
-    private static final String ERROR_NO_PERMISSION = "没有所需操作权限";
+    @Autowired
+    private TTokenProperties properties;
     
-    private final TTokenProperties properties;
-    private final TTokenConfiguration configuration;
-    private final HttpServletRequest request;
-    private final HttpServletResponse response;
+    @Autowired
+    @Qualifier("tokenConfiguration")
+    private TTokenConfiguration configuration;
     
-    private final TokenStore tokenStore;
-    private final TokenGenerator tokenGenerator;
-    private final UserIdGetter userIdGetter;
-    private final RoleGetter roleGetter;
-    private final PermissionGetter permissionGetter;
+    @Autowired(required = false)
+    @Qualifier("defaultTokenConfiguration")
+    private DefaultTTokenConfiguration defaultConfiguration;
     
-    private static final Logger log = LoggerFactory.getLogger(TokenManager.class);
+    @Autowired
+    private HttpServletRequest request;
     
-    public TokenManager(TTokenProperties properties,
-                       TTokenConfiguration configuration,
-                       HttpServletRequest request,
-                       HttpServletResponse response) {
-        this.properties = properties;
-        this.configuration = configuration;
-        this.request = request;
-        this.response = response;
+    @Autowired
+    private HttpServletResponse response;
+    
+    @Autowired
+    private TokenLogger tokenLogger;
+    
+    private TokenStore tokenStore;
+    private TokenGenerator tokenGenerator;
+    private UserIdGetter userIdGetter;
+    private RoleGetter roleGetter;
+    private PermissionGetter permissionGetter;
+    
+    @PostConstruct
+    public void init() {
+        // 优先使用用户配置，如果没有则使用默认配置
+        TTokenConfiguration effectiveConfig = configuration != null ? configuration : defaultConfiguration;
         
-        this.tokenStore = configuration.getTokenStore();
-        this.tokenGenerator = configuration.getTokenGenerator();
-        this.userIdGetter = configuration.getUserIdGetter();
-        this.roleGetter = configuration.getRoleGetter();
-        this.permissionGetter = configuration.getPermissionGetter();
+        this.tokenStore = effectiveConfig.getTokenStore();
+        this.tokenGenerator = effectiveConfig.getTokenGenerator();
+        this.userIdGetter = effectiveConfig.getUserIdGetter();
+        this.roleGetter = effectiveConfig.getRoleGetter();
+        this.permissionGetter = effectiveConfig.getPermissionGetter();
     }
     
     private String getTokenName() {
@@ -107,8 +117,30 @@ public class TokenManager {
      * 创建token并关联用户对象
      */
     public String createToken(Object userObj) {
+        String userId = getUserId(userObj);
+        TokenStore store = getTokenStore();
+        
+        if (userId != null) {
+            String existingToken = store.getTokenByUserId(userId);
+            
+            // 如果已经存在token
+            if (existingToken != null) {
+                // 如果允许并发登录且共享token，直接返回已存在的token
+                if (properties.isConcurrent() && properties.isShare()) {
+                    return existingToken;
+                }
+                
+                // 如果不允许并发登录，移除旧token
+                if (!properties.isConcurrent()) {
+                    store.remove(existingToken);
+                    store.removeUserIdToken(userId);
+                }
+            }
+        }
+        
+        // 创建新token
         String token = getTokenGenerator().generate(userObj);
-        getTokenStore().store(token, userObj);
+        store.store(token, userObj);
         
         // 使用配置的存储方式
         if (getTokenStorage().contains(TokenStorageEnum.COOKIE)) {
@@ -122,6 +154,7 @@ public class TokenManager {
             response.addCookie(cookie);
         }
         
+        tokenLogger.logLogin(userId, token, true, null);
         return token;
     }
     
@@ -178,13 +211,48 @@ public class TokenManager {
     }
     
     /**
+     * 检查token是否过期
+     */
+    private boolean isTokenExpired(String token) {
+        TokenStore store = getTokenStore();
+        Long createTime = store.getCreateTime(token);
+        Long lastAccessTime = store.getLastAccessTime(token);
+        
+        if (createTime == null || lastAccessTime == null) {
+            return true;
+        }
+        
+        long now = System.currentTimeMillis();
+        
+        // 检查绝对过期时间
+        if (now - createTime > properties.getTimeout() * 1000) {
+            return true;
+        }
+        
+        // 检查临时过期时间
+        if (now - lastAccessTime > properties.getActiveTimeout() * 1000) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
      * 获取当前登录用户
      */
     @SuppressWarnings("unchecked")
     public <T> T getLoginUser() {
         String token = getToken();
         if (token != null) {
-            // 直接返回原始对象
+            // 检查token是否过期
+            if (isTokenExpired(token)) {
+                removeToken();
+                return null;
+            }
+            
+            // 更新最后访问时间
+            getTokenStore().updateLastAccessTime(token);
+            
             return (T) getTokenStore().getUser(token, Object.class);
         }
         return null;
@@ -205,6 +273,9 @@ public class TokenManager {
     public void removeToken() {
         String token = getToken();
         if (token != null) {
+            Object userObj = getLoginUser();
+            String userId = getUserId(userObj);
+            
             getTokenStore().remove(token);
             tokenHolder.remove();
             
@@ -217,11 +288,14 @@ public class TokenManager {
                 }
                 response.addCookie(cookie);
             }
+            
+            tokenLogger.logLogout(userId, token);
         }
     }
     
     public void checkLogin() {
         if (getToken() == null) {
+            tokenLogger.logUnauthorized(request.getRequestURI());
             throw new AuthException(ERROR_NOT_LOGIN);
         }
     }
@@ -330,5 +404,16 @@ public class TokenManager {
             }
         }
         return new ArrayList<>();
+    }
+    
+    private String getUserId(Object userObj) {
+        if (userObj == null) {
+            return null;
+        }
+        UserIdGetter getter = getUserIdGetter();
+        if (getter != null) {
+            return getter.getUserId(userObj);
+        }
+        return null;
     }
 } 
