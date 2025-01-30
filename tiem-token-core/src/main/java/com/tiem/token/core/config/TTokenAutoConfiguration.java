@@ -27,7 +27,12 @@ import java.util.List;
  * 只在用户没有自定义配置时生效
  */
 @Configuration
-@ConditionalOnProperty(prefix = CONFIG_PREFIX, name = PROP_ENABLED, matchIfMissing = true)
+@ConditionalOnProperty(
+    prefix = CONFIG_PREFIX,
+    name = PROP_ENABLED,
+    havingValue = "true",
+    matchIfMissing = true
+)
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 public class TTokenAutoConfiguration {
     @Autowired

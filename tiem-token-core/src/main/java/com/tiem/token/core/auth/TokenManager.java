@@ -246,7 +246,9 @@ public class TokenManager {
         if (token != null) {
             // 检查token是否过期
             if (isTokenExpired(token)) {
-                removeToken();
+                // 直接调用store的remove方法，避免递归
+                getTokenStore().remove(token);
+                tokenHolder.remove();
                 return null;
             }
             
@@ -273,8 +275,12 @@ public class TokenManager {
     public void removeToken() {
         String token = getToken();
         if (token != null) {
-            Object userObj = getLoginUser();
-            String userId = getUserId(userObj);
+            // 直接从store中获取用户ID，避免递归调用
+            String userId = null;
+            Object userObj = getTokenStore().getUser(token, Object.class);
+            if (userObj != null) {
+                userId = getUserId(userObj);
+            }
             
             getTokenStore().remove(token);
             tokenHolder.remove();

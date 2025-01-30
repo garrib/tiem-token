@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import lombok.Data;
+import com.tiem.token.core.middleware.AuthMiddleware;
 
 /**
  * Token配置类，使用builder模式配置
@@ -49,6 +50,8 @@ public class TTokenConfiguration {
     
     @lombok.Builder.Default
     private ObjectMapper objectMapper = new ObjectMapper();
+    
+    private List<AuthMiddleware> middlewares = new ArrayList<>();
     
     protected TTokenConfiguration() {
         // 设置默认值
@@ -95,6 +98,7 @@ public class TTokenConfiguration {
         this.storeType = builder.getConfig().storeType;
         this.tokenExpireTime = builder.getConfig().tokenExpireTime;
         this.objectMapper = builder.getConfig().objectMapper;
+        this.middlewares = builder.getConfig().middlewares;
     }
     
     public static Builder builder() {
@@ -218,6 +222,16 @@ public class TTokenConfiguration {
         
         public Builder objectMapper(ObjectMapper objectMapper) {
             config.objectMapper = objectMapper;
+            return this;
+        }
+        
+        public Builder addMiddleware(AuthMiddleware middleware) {
+            config.middlewares.add(middleware);
+            return this;
+        }
+        
+        public Builder middlewares(List<AuthMiddleware> middlewares) {
+            config.middlewares = middlewares;
             return this;
         }
         

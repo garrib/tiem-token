@@ -16,7 +16,8 @@ import static com.tiem.token.common.constant.TokenConstant.*;
 @ConditionalOnProperty(
     prefix = CONFIG_PREFIX,
     name = PROP_STORE_TYPE,
-    havingValue = STORE_TYPE_REDIS
+    havingValue = STORE_TYPE_REDIS,
+    matchIfMissing = false
 )
 public class RedisTokenStore implements TokenStore {
     

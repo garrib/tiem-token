@@ -14,7 +14,7 @@ import static com.tiem.token.common.constant.TokenConstant.*;
     prefix = CONFIG_PREFIX,
     name = PROP_STORE_TYPE,
     havingValue = STORE_TYPE_MEMORY,
-    matchIfMissing = true  // 如果属性未配置，默认使用内存存储
+    matchIfMissing = true
 )
 public class MemoryTokenStore implements TokenStore {
     

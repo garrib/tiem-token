@@ -6,6 +6,8 @@ import com.tiem.token.core.auth.TokenManager;
 import com.tiem.token.core.handler.impl.CheckLoginHandler;
 import com.tiem.token.core.handler.impl.CheckPermissionHandler;
 import com.tiem.token.core.handler.impl.CheckRoleHandler;
+import com.tiem.token.core.middleware.AuthMiddleware;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +34,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     
     private List<AnnotationHandler<? extends Annotation>> handlers;
     
-    @Autowired
+    @PostConstruct
     public void init() {
         handlers = new ArrayList<>();
         handlers.add(new CheckLoginHandler());
@@ -51,6 +54,18 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        // 执行前置中间件
+        List<AuthMiddleware> middlewares = configuration.getMiddlewares();
+        if (middlewares != null) {
+            // 按order排序
+            middlewares.sort(Comparator.comparingInt(AuthMiddleware::getOrder));
+            for (AuthMiddleware middleware : middlewares) {
+                if (!middleware.beforeAuth(request, response)) {
+                    return false;
+                }
+            }
+        }
+
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         
         // 初始化处理器映射
@@ -58,11 +73,18 @@ public class AuthInterceptor implements HandlerInterceptor {
             initHandlerMap();
         }
         
-        // 获取方法上的所有注解
+        // 获取方法上的所有注解并处理
         for (Annotation annotation : handlerMethod.getMethod().getAnnotations()) {
             AnnotationHandler<Annotation> annotationHandler = (AnnotationHandler<Annotation>) handlerMap.get(annotation.annotationType());
             if (annotationHandler != null) {
                 annotationHandler.handle(annotation, tokenManager);
+            }
+        }
+
+        // 执行后置中间件
+        if (middlewares != null) {
+            for (AuthMiddleware middleware : middlewares) {
+                middleware.afterAuth(request, response);
             }
         }
 

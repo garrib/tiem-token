@@ -6,6 +6,7 @@ import com.tiem.token.core.config.DefaultTTokenConfiguration;
 import com.tiem.token.core.config.TTokenConfiguration;
 import com.tiem.token.test.handler.CheckAdminHandler;
 import com.tiem.token.test.model.CustomUser;
+import com.tiem.token.test.middleware.LoggingMiddleware;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +37,7 @@ public class TestTokenConfiguration {
                 .tokenName("iiib")
                 // 覆盖需要修改的配置
                 .tokenPrefix("Custom ")
+                .addMiddleware(new LoggingMiddleware())
                 .build();
     }
 } 
