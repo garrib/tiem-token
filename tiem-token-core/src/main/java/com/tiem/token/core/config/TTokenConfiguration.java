@@ -24,6 +24,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import lombok.Data;
 import com.tiem.token.core.middleware.AuthMiddleware;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import com.tiem.token.core.event.TokenCreatedEvent;
+import com.tiem.token.core.event.TokenExpiredEvent;
+import com.tiem.token.core.event.TokenRefreshedEvent;
+import com.tiem.token.core.event.TokenRemovedEvent;
+import com.tiem.token.core.listener.TokenEventListener;
 
 /**
  * Token配置类，使用builder模式配置
@@ -238,5 +245,31 @@ public class TTokenConfiguration {
         public DefaultTTokenConfiguration build() {
             return new DefaultTTokenConfiguration(this);
         }
+    }
+    
+    @Bean
+    @ConditionalOnMissingBean
+    public TokenEventListener defaultTokenEventListener() {
+        return new TokenEventListener() {
+            @Override
+            public void onTokenCreated(TokenCreatedEvent event) {
+                // 默认实现为空
+            }
+            
+            @Override
+            public void onTokenExpired(TokenExpiredEvent event) {
+                // 默认实现为空
+            }
+            
+            @Override
+            public void onTokenRefreshed(TokenRefreshedEvent event) {
+                // 默认实现为空
+            }
+            
+            @Override
+            public void onTokenRemoved(TokenRemovedEvent event) {
+                // 默认实现为空
+            }
+        };
     }
 } 

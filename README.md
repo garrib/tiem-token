@@ -94,19 +94,44 @@ public class CustomTokenStore implements TokenStore {
 ```
 
 ### 事件监听
+你可以通过实现 `TokenEventListener` 接口来监听令牌相关事件：
+
 ```java
 @Component
-public class TokenEventListener {
-    @EventListener
+public class CustomTokenEventListener implements TokenEventListener {
+    @Override
     public void onTokenCreated(TokenCreatedEvent event) {
+        String token = event.getToken();
+        String userId = event.getUserId();
         // 处理令牌创建事件
     }
-    @EventListener
+    
+    @Override
     public void onTokenExpired(TokenExpiredEvent event) {
         // 处理令牌过期事件
     }
+    
+    @Override
+    public void onTokenRefreshed(TokenRefreshedEvent event) {
+        String oldToken = event.getToken();
+        String newToken = event.getNewToken();
+        // 处理令牌刷新事件
+    }
+    
+    @Override
+    public void onTokenRemoved(TokenRemovedEvent event) {
+        // 处理令牌删除事件
+    }
 }
 ```
+
+所有事件都包含以下基本信息：
+- token: 相关的令牌
+- userId: 用户标识
+- source: 事件源对象
+
+TokenRefreshedEvent 额外包含：
+- newToken: 刷新后的新令牌
 
 ## 📋 配置详解
 

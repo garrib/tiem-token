@@ -27,6 +27,10 @@ import java.util.ArrayList;
 import com.tiem.token.core.log.TokenLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
+import com.tiem.token.core.event.TokenCreatedEvent;
+import com.tiem.token.core.event.TokenRemovedEvent;
+import com.tiem.token.core.event.TokenRefreshedEvent;
 
 import static com.tiem.token.common.constant.TokenConstant.*;
 
@@ -56,6 +60,9 @@ public class TokenManager {
     
     @Autowired
     private TokenLogger tokenLogger;
+    
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
     
     private TokenStore tokenStore;
     private TokenGenerator tokenGenerator;
@@ -155,6 +162,7 @@ public class TokenManager {
         }
         
         tokenLogger.logLogin(userId, token, true, null);
+        eventPublisher.publishEvent(new TokenCreatedEvent(this, token, userId));
         return token;
     }
     
@@ -296,6 +304,7 @@ public class TokenManager {
             }
             
             tokenLogger.logLogout(userId, token);
+            eventPublisher.publishEvent(new TokenRemovedEvent(this, token, userId));
         }
     }
     
@@ -421,5 +430,22 @@ public class TokenManager {
             return getter.getUserId(userObj);
         }
         return null;
+    }
+    
+    public String refreshToken(String oldToken) {
+        String userId = getUserId(oldToken);
+        // 生成新token
+        Object userObj = getTokenStore().getUser(oldToken, Object.class);
+        String newToken = getTokenGenerator().generate(userObj);
+        
+        // 存储新token
+        TokenStore store = getTokenStore();
+        store.store(newToken, userObj);
+        store.remove(oldToken);
+        
+        // 发布刷新事件
+        eventPublisher.publishEvent(new TokenRefreshedEvent(this, oldToken, newToken, userId));
+        
+        return newToken;
     }
 } 
